@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Result Management</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: "Times New Roman", serif;
+      background: linear-gradient(135deg, #f6d365, #fda085);
+      padding: 30px;
+      margin: 0;
+      animation: glowBody 5s infinite alternate;
+    }
+
+    @keyframes glowBody {
+      0% {
+        background-color: #f6d365;
+        box-shadow: 0 0 40px #ff9a8b;
+      }
+      100% {
+        background-color: #fda085;
+        box-shadow: 0 0 60px #f3722c;
+      }
+    }
+
+    .container {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 1000px;
+      margin: auto;
+      box-shadow: 0 0 40px #ff9a8b;
+      transition: 0.4s ease-in-out;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 40px;
+      color: #5a189a;
+      margin-bottom: 30px;
+      text-shadow: 0 0 10px #9d4edd, 0 0 20px #9d4edd;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+      box-shadow: 0 0 25px rgba(0,0,0,0.2);
+      padding: 20px;
+      border-radius: 15px;
+      background: rgba(255,255,255,0.9);
+    }
+
+    input, button {
+      padding: 14px;
+      font-size: 16px;
+      font-family: "Times New Roman", serif;
+      border: 2px solid #7b2cbf;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #c77dff;
+    }
+
+    button {
+      background: #7b2cbf;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+      text-shadow: 0 0 5px #ffffff;
+    }
+
+    button:hover {
+      background: #9d4edd;
+      box-shadow: 0 0 20px #c77dff;
+    }
+
+    .results {
+      display: none;
+      margin-top: 40px;
+      animation: glowResult 4s infinite alternate;
+    }
+
+    @keyframes glowResult {
+      0% {
+        box-shadow: 0 0 20px #ffb703;
+      }
+      100% {
+        box-shadow: 0 0 40px #fb8500;
+      }
+    }
+
+    .info {
+      font-size: 18px;
+      margin-bottom: 25px;
+      background: #fff7e6;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px #f3722c;
+    }
+
+    .info span {
+      font-weight: bold;
+      color: #5a189a;
+      text-shadow: 0 0 5px #fbbf24;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+      box-shadow: 0 0 20px #f3722c;
+    }
+
+    th, td {
+      border: 2px solid #7b2cbf;
+      padding: 12px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    th {
+      background-color: #5a189a;
+      color: white;
+      text-shadow: 0 0 5px #ffffff;
+    }
+
+    .charts {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      align-items: center;
+      gap: 30px;
+    }
+
+    canvas {
+      width: 450px !important;
+      height: 450px !important;
+      box-shadow: 0 0 30px #ffb703;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.95);
+      animation: glowCanvas 4s infinite alternate;
+    }
+
+    @keyframes glowCanvas {
+      0% {
+        box-shadow: 0 0 20px #f9c74f;
+      }
+      100% {
+        box-shadow: 0 0 35px #f9844a;
+      }
+    }
+
+    @media screen and (max-width: 768px) {
+      canvas {
+        width: 100% !important;
+        height: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Student Result Management</h1>
+
+    <form id="resultForm">
+      <input type="text" id="name" placeholder="Student Name" required />
+      <input type="text" id="roll" placeholder="Roll Number" required />
+      <input type="text" id="dept" placeholder="Department" required />
+      <input type="number" id="english" placeholder="English Marks" required />
+      <input type="number" id="tamil" placeholder="Tamil Marks" required />
+      <input type="number" id="maths" placeholder="Maths Marks" required />
+      <input type="number" id="ds" placeholder="Data Structure Marks" required />
+      <input type="number" id="java" placeholder="Java Marks" required />
+      <button type="submit">Generate Result</button>
+    </form>
+
+    <div class="results" id="resultSection">
+      <div class="info">
+        <p>Name: <span id="displayName"></span></p>
+        <p>Roll No: <span id="displayRoll"></span></p>
+        <p>Department: <span id="displayDept"></span></p>
+        <p>Percentage: <span id="displayPercentage"></span>%</p>
+        <p>Grade: <span id="displayGrade"></span></p>
+        <p>Status: <span id="displayStatus"></span></p>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Marks</th>
+          </tr>
+        </thead>
+        <tbody id="marksTable"></tbody>
+      </table>
+
+      <div class="charts">
+        <canvas id="pieChart"></canvas>
+        <canvas id="barChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("resultForm");
+    const resultSection = document.getElementById("resultSection");
+    const marksTable = document.getElementById("marksTable");
+
+    let pieChart, barChart;
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const name = document.getElementById("name").value;
+      const roll = document.getElementById("roll").value;
+      const dept = document.getElementById("dept").value;
+      const english = parseInt(document.getElementById("english").value);
+      const tamil = parseInt(document.getElementById("tamil").value);
+      const maths = parseInt(document.getElementById("maths").value);
+      const ds = parseInt(document.getElementById("ds").value);
+      const java = parseInt(document.getElementById("java").value);
+
+      const marks = {
+        English: english,
+        Tamil: tamil,
+        Maths: maths,
+        "Data Structure": ds,
+        Java: java
+      };
+
+      let total = 0;
+      let fail = false;
+
+      marksTable.innerHTML = "";
+
+      for (let subject in marks) {
+        const mark = marks[subject];
+        total += mark;
+        if (mark < 35) fail = true;
+        marksTable.innerHTML += `<tr><td>${subject}</td><td>${mark}</td></tr>`;
+      }
+
+      const percentage = (total / 500 * 100).toFixed(2);
+      let grade = "F", status = "Fail";
+
+      if (!fail) {
+        if (percentage >= 90) grade = "A+";
+        else if (percentage >= 75) grade = "A";
+        else if (percentage >= 60) grade = "B";
+        else if (percentage >= 40) grade = "C";
+        else grade = "F";
+
+        if (grade !== "F") status = "Pass";
+      }
+
+      document.getElementById("displayName").textContent = name;
+      document.getElementById("displayRoll").textContent = roll;
+      document.getElementById("displayDept").textContent = dept;
+      document.getElementById("displayPercentage").textContent = percentage;
+      document.getElementById("displayGrade").textContent = grade;
+      document.getElementById("displayStatus").textContent = status;
+
+      if (pieChart) pieChart.destroy();
+      if (barChart) barChart.destroy();
+
+      const labels = Object.keys(marks);
+      const data = Object.values(marks);
+      const colors = ["#f94144", "#f3722c", "#f8961e", "#43aa8b", "#577590"];
+
+      pieChart = new Chart(document.getElementById("pieChart"), {
+        type: "pie",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Marks",
+            data: data,
+            backgroundColor: colors
+          }]
+        }
+      });
+
+      barChart = new Chart(document.getElementById("barChart"), {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Marks",
+            data: data,
+            backgroundColor: colors
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100
+            }
+          }
+        }
+      });
+
+      resultSection.style.display = "block";
+    });
+  </script>
+</body>
+</html>
